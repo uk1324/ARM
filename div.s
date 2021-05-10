@@ -12,8 +12,8 @@ text:
 _start:
 	mov r7, #4
 
-	mov r0, #9
-	mov r1, #3
+	mov r0, #185
+	mov r1, #5
 	bl div
 
 	mov r4, r0
@@ -47,8 +47,11 @@ exit:
 
 div:
 	push {r3-r10, r11, lr}
-	
+	https://community.arm.com/developer/tools-software/oss-platforms/f/dev-platforms-forum/5436/i-want-to-know-meaning-of-r12-register
 	clz r2, r0			@ r2 - number of bits in dividend
+	@ could store the result of lsl in diffrent register and then
+	@ the result (r4) in r0 so the result is already in the return register
+	lsl r0, r2
 	rsb r2, r2, #32
 	
 	clz r3, r1			@ r3 - number of bits in divisor
@@ -60,17 +63,21 @@ div:
 
 	mov r6, #1			@ you can't bitshift a constant so i just store 1 there
 
+	mov r7, #0
+
 div_loop:
 	@ if no more bits can be borrowed return 
-	sub r2, r2, #1
+	subs r2, r2, #1
 
-	cmp r2, #0
 	blt div_end
 
 	@ borrow bit
-	lsl r5, r5, #1
-	and r7, r0, r6, lsl r2		@ r7- result of shift
-	add r5, r5, r7, lsr r2
+@	lsl r5, r5, #1
+
+	lsls r0, r0, #1
+
+	adc r5, r7, r5, lsl #1
+
 
 	@ if the number is smaller than the divident borrow bit and loop again
 	cmp r5, r1
@@ -89,3 +96,5 @@ div_end:
 	mov r1, r5
 	pop {r3-r10, r11, pc}
 	bx lr	
+
+
